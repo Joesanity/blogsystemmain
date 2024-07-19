@@ -48,6 +48,11 @@ const getRandomImageUrl = (categoryNumber: number) => {
   return `https://blog-images.stackstaging.com/${categoryNumber}/${randomImageNumber}.jpg`;
 };
 
+type GenerateContentResponse = {
+  content: string;
+  title: string;
+};
+
 export const generateRouter = createTRPCRouter({
   generateBlogPost: publicProcedure
     .input(
@@ -80,7 +85,7 @@ export const generateRouter = createTRPCRouter({
       const imageUrl = getRandomImageUrl(categoryNumber);
 
       try {
-        const response = await axios.post(
+        const response = await axios.post<GenerateContentResponse>(
           "http://localhost:3000/api/generateContent",
           {
             keywords,
@@ -133,8 +138,7 @@ export const generateRouter = createTRPCRouter({
         throw new Error("Blog post not found");
       }
 
-      const { url, username, applicationPassword, stockCategory } =
-        blog.website;
+      const { url, username, applicationPassword, stockCategory } = blog.website;
 
       const uploadImageToWordPress = async (imageUrl: string) => {
         const response = await fetch(imageUrl);

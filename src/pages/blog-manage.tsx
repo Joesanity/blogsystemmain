@@ -1,9 +1,23 @@
-import Link from "next/link";
-import Image from "next/image";
 import { api } from "~/utils/api";
 import router from "next/router";
 import { useState } from "react";
 import withAuth, { withAuthGetServerSideProps } from "~/components/hoc/withAuth";
+
+type Website = {
+  id: number;
+  url: string;
+  blogNoTotal: string;
+  blogAmountMonthly: string;
+  blogStartingDate: string;
+  blogsToReview: { id: number }[];
+  blogsComplete: { id: number }[];
+  keywords: string;
+  stockCategory: string;
+  locations: string;
+  phoneNumber: string;
+  emailAddress: string;
+  companyName: string;
+};
 
 function ManageBlogs() {
   const {
@@ -13,7 +27,7 @@ function ManageBlogs() {
   } = api.website.getWebsites.useQuery();
 
   const generateBlogPostMutation = api.generate.generateBlogPost.useMutation();
-  const [loadingWebsiteId, setLoadingWebsiteId] = useState<string | null>(null);
+  const [loadingWebsiteId, setLoadingWebsiteId] = useState<number | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [isRunningAll, setIsRunningAll] = useState<boolean>(false);
 
@@ -33,7 +47,7 @@ function ManageBlogs() {
     return totalBlogsNeeded - blogsComplete;
   };
 
-  const handleGenerateBlogPost = async (website: any) => {
+  const handleGenerateBlogPost = async (website: Website) => {
     if (!website.keywords || !website.stockCategory || !website.locations || !website.phoneNumber || !website.emailAddress || !website.companyName) {
       alert("Missing required information for the website.");
       return;
@@ -45,7 +59,7 @@ function ManageBlogs() {
       return;
     }
 
-    setLoadingWebsiteId(website.id.toString());
+    setLoadingWebsiteId(website.id);
 
     try {
       for (let i = 0; i < requiredBlogs; i++) {
@@ -77,7 +91,7 @@ function ManageBlogs() {
 
     const totalWebsites = websites.length;
     for (let i = 0; i < totalWebsites; i++) {
-      const website = websites[i];
+      const website = websites[i] as unknown as Website;
       if (!website) continue; // Check if website is undefined
 
       try {
@@ -179,11 +193,11 @@ function ManageBlogs() {
                 </td>
                 <td className="break-all px-6 py-4 text-sm text-gray-500">
                   <button
-                    onClick={() => handleGenerateBlogPost(website)}
+                    onClick={() => handleGenerateBlogPost(website as Website)}
                     className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                    disabled={loadingWebsiteId === website.id.toString()}
+                    disabled={loadingWebsiteId === website.id}
                   >
-                    {loadingWebsiteId === website.id.toString() ? (
+                    {loadingWebsiteId === website.id ? (
                       <svg
                         className="animate-spin h-5 w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg"

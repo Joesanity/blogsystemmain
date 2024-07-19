@@ -1,8 +1,5 @@
-import { signIn, signOut, useSession } from "next-auth/react";
-import Head from "next/head";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import BackButton from "~/components/buttons/backbutton";
 import { api } from "~/utils/api";
@@ -11,18 +8,15 @@ import withAuth, { withAuthGetServerSideProps } from "~/components/hoc/withAuth"
 function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const url = searchParams.get("url") || "NULL";
+  const url = searchParams.get("url") ?? "NULL";
 
-  if (url === "NULL") {
-    router.push("/add-website");
-  }
+  useEffect(() => {
+    if (url === "NULL") {
+      router.push("/add-website");
+    }
+  }, [url, router]);
 
-  const {
-    data: getWebsite,
-    isLoading,
-    isError,
-    error,
-  } = api.website.getWebsite.useQuery({ url });
+  const { data: getWebsite, isLoading, isError } = api.website.getWebsite.useQuery({ url });
 
   const [formData, setFormData] = useState({
     url: "",
@@ -59,10 +53,10 @@ function Home() {
     try {
       await mutation.mutateAsync(formData);
       alert("Website updated successfully");
+      router.push('/add-website');
     } catch (error) {
       alert("Error updating website");
     }
-    router.push('/add-website');
   };
 
   const stockCategoryMapping = {

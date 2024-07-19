@@ -1,28 +1,26 @@
-import { signIn, signOut, useSession } from "next-auth/react";
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Router, { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import BackButton from "~/components/buttons/backbutton";
 import { api } from "~/utils/api";
 import withAuth, { withAuthGetServerSideProps } from "~/components/hoc/withAuth";
+import { useEffect } from "react";
 
 function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const url = searchParams.get("url") || "NULL";
+  const url = searchParams.get("url") ?? "NULL";
 
-  if (url === "NULL") {
-    router.push("/add-website");
-  }
+  // Use useEffect to handle the redirect logic
+  useEffect(() => {
+    if (url === "NULL") {
+      router.push("/add-website").catch((err) => console.error(err));
+    }
+  }, [url, router]);
 
   const {
     data: getWebsite,
     isLoading,
     isError,
-    error,
   } = api.website.getWebsite.useQuery({ url });
 
   const formatDate = (dateString: string) => {

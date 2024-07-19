@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 
 export const websiteRouter = createTRPCRouter({
@@ -49,10 +48,10 @@ export const websiteRouter = createTRPCRouter({
           keywords,
           locations,
           landingPages: {
-            create: landingPages?.map((page) => ({ url: page })) || [],
+            create: landingPages?.map((page) => ({ url: page })) ?? [],
           },
           blogPosts: {
-            create: blogPosts?.map((post) => ({ title: post })) || [],
+            create: blogPosts?.map((post) => ({ title: post })) ?? [],
           },
         },
       });
@@ -101,7 +100,7 @@ export const websiteRouter = createTRPCRouter({
       });
     }),
 
-    editWebsite: protectedProcedure
+  editWebsite: protectedProcedure
     .input(
       z.object({
         url: z.string().url(),
