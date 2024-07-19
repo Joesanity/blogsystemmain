@@ -1,6 +1,6 @@
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import BackButton from "~/components/buttons/backbutton";
 import { api } from "~/utils/api";
 import withAuth, { withAuthGetServerSideProps } from "~/components/hoc/withAuth";
@@ -12,7 +12,7 @@ function Home() {
 
   useEffect(() => {
     if (url === "NULL") {
-      router.push("/add-website");
+      void router.push("/add-website");
     }
   }, [url, router]);
 
@@ -40,7 +40,7 @@ function Home() {
 
   const mutation = api.website.editWebsite.useMutation();
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -48,12 +48,12 @@ function Home() {
     }));
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await mutation.mutateAsync(formData);
       alert("Website updated successfully");
-      router.push('/add-website');
+      void router.push('/add-website');
     } catch (error) {
       alert("Error updating website");
     }

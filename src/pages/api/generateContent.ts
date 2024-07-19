@@ -21,6 +21,10 @@ const generateContent = async (req: NextApiRequest, res: NextApiResponse) => {
   };
 
   try {
+    // Join arrays into strings
+    const keywordsStr = keywords.join(', ');
+    const locationsStr = locations.join(', ');
+
     // Title of content
     const titleResponse = await openai.chat.completions.create({
       messages: [
@@ -30,7 +34,7 @@ const generateContent = async (req: NextApiRequest, res: NextApiResponse) => {
         },
         {
           role: 'user',
-          content: `Create one blog post idea from one of these: ${keywords} and use one of these locations: ${locations}. Make it suitable for long tail keywords, it should be between 7-10 words and be a creative idea that isn't common.`
+          content: `Create one blog post idea from one of these: ${keywordsStr} and use one of these locations: ${locationsStr}. Make it suitable for long tail keywords, it should be between 7-10 words and be a creative idea that isn't common.`
         }
       ],
       model: 'gpt-4o-mini',

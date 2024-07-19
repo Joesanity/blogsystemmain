@@ -1,10 +1,16 @@
 // components/hoc/withAuth.tsx
 
-import type { GetServerSideProps, GetServerSidePropsContext } from "next";
+import type { GetServerSideProps, GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { getSession } from "next-auth/react";
+import { Session } from "next-auth";
+import { PropsWithChildren } from "react";
 
-const withAuth = (WrappedComponent: React.ComponentType<any>) => {
-  const AuthenticatedComponent = (props: any) => {
+type WithAuthProps = {
+  session: Session | null;
+};
+
+const withAuth = (WrappedComponent: React.ComponentType<PropsWithChildren<WithAuthProps>>) => {
+  const AuthenticatedComponent = (props: PropsWithChildren<WithAuthProps>) => {
     return <WrappedComponent {...props} />;
   };
 
@@ -31,7 +37,7 @@ const withAuth = (WrappedComponent: React.ComponentType<any>) => {
 };
 
 export const withAuthGetServerSideProps = (getServerSidePropsFunc?: GetServerSideProps) => {
-  return async (context: GetServerSidePropsContext) => {
+  return async (context: GetServerSidePropsContext): Promise<GetServerSidePropsResult<WithAuthProps>> => {
     const session = await getSession(context);
 
     if (!session?.user?.authorized) {
@@ -49,7 +55,7 @@ export const withAuthGetServerSideProps = (getServerSidePropsFunc?: GetServerSid
       return {
         ...result,
         props: {
-          ...result.props,
+          ...(result.props as object),
           session,
         },
       };

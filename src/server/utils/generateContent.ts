@@ -21,7 +21,7 @@ export const generateContent = async (keywords: string, stockCategory: string): 
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data: GenerateContentResponse = await response.json();
+    const data = (await response.json()) as GenerateContentResponse;
     
     // Return only the HTML content
     return data.content;

@@ -53,6 +53,19 @@ type GenerateContentResponse = {
   title: string;
 };
 
+type Blog = {
+  id: number;
+  title: string;
+  content: string;
+  websiteId: number;
+  website: {
+    url: string;
+    username: string;
+    applicationPassword: string;
+    stockCategory: string;
+  };
+};
+
 export const generateRouter = createTRPCRouter({
   generateBlogPost: publicProcedure
     .input(
@@ -127,7 +140,7 @@ export const generateRouter = createTRPCRouter({
   acceptBlogPost: publicProcedure
     .input(z.number())
     .mutation(async ({ input, ctx }) => {
-      const blog = await ctx.db.blogToReview.findUnique({
+      const blog: Blog | null = await ctx.db.blogToReview.findUnique({
         where: { id: input },
         include: {
           website: true, // Include the website details
@@ -140,7 +153,7 @@ export const generateRouter = createTRPCRouter({
 
       const { url, username, applicationPassword, stockCategory } = blog.website;
 
-      const uploadImageToWordPress = async (imageUrl: string) => {
+      const uploadImageToWordPress = async (imageUrl: string): Promise<number> => {
         const response = await fetch(imageUrl);
         const imageBlob = await response.blob();
         const formData = new FormData();
@@ -170,7 +183,7 @@ export const generateRouter = createTRPCRouter({
         title: string,
         content: string,
         featuredImageId: number,
-      ) => {
+      ): Promise<unknown> => {
         const response = await fetch(`${url}/wp-json/wp/v2/posts`, {
           method: "POST",
           headers: {
