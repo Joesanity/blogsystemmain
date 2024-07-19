@@ -111,8 +111,7 @@ export const generateRouter = createTRPCRouter({
           },
         );
 
-        const fullContent = response.data.content;
-        const blogTitle = response.data.title;
+        const { content: fullContent, title: blogTitle } = response.data;
 
         const blogToReview = await ctx.db.blogToReview.create({
           data: {
@@ -140,7 +139,7 @@ export const generateRouter = createTRPCRouter({
   acceptBlogPost: publicProcedure
     .input(z.number())
     .mutation(async ({ input, ctx }) => {
-      const blog: Blog | null = await ctx.db.blogToReview.findUnique({
+      const blog = await ctx.db.blogToReview.findUnique({
         where: { id: input },
         include: {
           website: true, // Include the website details
@@ -162,8 +161,7 @@ export const generateRouter = createTRPCRouter({
         const uploadResponse = await fetch(`${url}/wp-json/wp/v2/media`, {
           method: "POST",
           headers: {
-            Authorization:
-              "Basic " + btoa(`${username}:${applicationPassword}`),
+            Authorization: "Basic " + btoa(`${username}:${applicationPassword}`),
           },
           body: formData,
         });
@@ -188,8 +186,7 @@ export const generateRouter = createTRPCRouter({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:
-              "Basic " + btoa(`${username}:${applicationPassword}`),
+            Authorization: "Basic " + btoa(`${username}:${applicationPassword}`),
           },
           body: JSON.stringify({
             title: title,
