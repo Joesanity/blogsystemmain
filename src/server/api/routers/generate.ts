@@ -53,19 +53,6 @@ type GenerateContentResponse = {
   title: string;
 };
 
-type Blog = {
-  id: number;
-  title: string;
-  content: string;
-  websiteId: number;
-  website: {
-    url: string;
-    username: string;
-    applicationPassword: string;
-    stockCategory: string;
-  };
-};
-
 export const generateRouter = createTRPCRouter({
   generateBlogPost: publicProcedure
     .input(
