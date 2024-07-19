@@ -4,6 +4,7 @@ import {
   getServerSession,
   type DefaultSession,
   type NextAuthOptions,
+  type Session,
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
 import DiscordProvider from "next-auth/providers/discord";
@@ -18,19 +19,21 @@ import { db } from "~/server/db";
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
 declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: DefaultSession["user"] & {
+  interface Session {
+    user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      authorized: boolean;
     };
   }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
 }
+
+/**
+ * Array of Discord IDs that should be allowed access
+ */
+const ALLOWED_DISCORD_IDS = ['clypvyczr0000fv7mlmai70b6'];  // Add more IDs as needed
 
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
@@ -39,13 +42,24 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      console.log('Session callback - user:', user, 'ALLOWED_DISCORD_IDS:', ALLOWED_DISCORD_IDS);
+
+      // Check if the user ID matches the allowed Discord ID
+      const isAuthorized = ALLOWED_DISCORD_IDS.includes(user.id);
+
+      console.log('Is user authorized:', isAuthorized);
+
+      // Return the session with the user ID included and authorized flag
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          authorized: isAuthorized,
+        },
+      };
+    },
   },
   adapter: PrismaAdapter(db) as Adapter,
   providers: [
@@ -53,15 +67,6 @@ export const authOptions: NextAuthOptions = {
       clientId: env.DISCORD_CLIENT_ID,
       clientSecret: env.DISCORD_CLIENT_SECRET,
     }),
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
   ],
 };
 

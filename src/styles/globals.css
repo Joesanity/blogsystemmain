@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* globals.css */
+
+.formatted-content h1 {
+    @apply text-4xl font-bold my-4;
+  }
+  
+  .formatted-content h2 {
+    @apply text-3xl font-bold my-3;
+  }
+  
+  .formatted-content p {
+    @apply text-base my-2 leading-relaxed;
+  }
+  
