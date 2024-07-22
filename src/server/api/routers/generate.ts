@@ -1,4 +1,3 @@
-// /server/api/routers/generateRouter.ts
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import axios from "axios";
@@ -89,12 +88,23 @@ export const generateRouter = createTRPCRouter({
 
       const categoryNumber = stockCategoryMapping[stockCategory];
       if (!categoryNumber) {
+        console.error("Invalid stock category:", stockCategory);
         throw new Error("Invalid stock category");
       }
 
       const imageUrl = getRandomImageUrl(categoryNumber);
 
       try {
+        console.log("Requesting content generation with data:", {
+          keywords,
+          stockCategory,
+          locations,
+          phoneNumber,
+          emailAddress,
+          companyName,
+          imageUrl,
+        });
+
         const response = await axios.post<GenerateContentResponse>(
           "https://blogsystemmain.vercel.app/api/generateContent",
           {
@@ -156,6 +166,7 @@ export const generateRouter = createTRPCRouter({
         });
 
         if (!blog) {
+          console.error("Blog post not found with ID:", input);
           throw new Error("Blog post not found");
         }
 
@@ -164,10 +175,14 @@ export const generateRouter = createTRPCRouter({
         const { url, username, applicationPassword, stockCategory } = blog.website;
 
         const uploadImageToWordPress = async (imageUrl: string): Promise<number> => {
+          console.log("Uploading image to WordPress:", imageUrl);
+
           const response = await fetch(imageUrl);
           const imageBlob = await response.blob();
           const formData = new FormData();
           formData.append("file", imageBlob, "featured-image.jpg");
+
+          console.log("Uploading image with form data:", formData);
 
           const uploadResponse = await fetch(`${url}/wp-json/wp/v2/media`, {
             method: "POST",
@@ -177,13 +192,15 @@ export const generateRouter = createTRPCRouter({
             body: formData,
           });
 
+          const responseBody = await uploadResponse.text();
+          console.log("Upload response body:", responseBody);
+
           if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text(); // Log the response text
-            console.error(`Failed to upload image to WordPress: ${errorText}`);
+            console.error(`Failed to upload image to WordPress: ${responseBody}`);
             throw new Error("Failed to upload image to WordPress");
           }
 
-          const uploadData = await uploadResponse.json();
+          const uploadData = JSON.parse(responseBody);
           return uploadData.id;
         };
 
@@ -195,6 +212,8 @@ export const generateRouter = createTRPCRouter({
           content: string,
           featuredImageId: number,
         ): Promise<unknown> => {
+          console.log("Publishing post to WordPress with:", { title, content, featuredImageId });
+
           const response = await fetch(`${url}/wp-json/wp/v2/posts`, {
             method: "POST",
             headers: {
@@ -209,17 +228,20 @@ export const generateRouter = createTRPCRouter({
             }),
           });
 
+          const responseBody = await response.text();
+          console.log("Publish response body:", responseBody);
+
           if (!response.ok) {
-            const errorText = await response.text(); // Log the response text
-            console.error(`Failed to publish post to WordPress: ${errorText}`);
+            console.error(`Failed to publish post to WordPress: ${responseBody}`);
             throw new Error("Failed to publish post to WordPress");
           }
 
-          return response.json();
+          return JSON.parse(responseBody);
         };
 
         const categoryNumber = stockCategoryMapping[stockCategory];
         if (!categoryNumber) {
+          console.error("Invalid stock category:", stockCategory);
           throw new Error("Invalid stock category");
         }
 
