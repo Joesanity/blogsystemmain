@@ -92,4 +92,4 @@ function Home() {
 
 export const getServerSideProps = withAuthGetServerSideProps();
 
-export default withAuth(Home);
+export default Home;

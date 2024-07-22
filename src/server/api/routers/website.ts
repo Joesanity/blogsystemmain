@@ -19,6 +19,8 @@ export const websiteRouter = createTRPCRouter({
         locations: z.string(),
         landingPages: z.array(z.string()).optional(),
         blogPosts: z.array(z.string()).optional(),
+        blogAmountMonthly: z.string(), // Add this
+        blogStartingDate: z.string(), // Add this
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -34,6 +36,8 @@ export const websiteRouter = createTRPCRouter({
         locations,
         landingPages,
         blogPosts,
+        blogAmountMonthly, // Add this
+        blogStartingDate, // Add this
       } = input;
 
       const website = await ctx.db.website.create({
@@ -53,6 +57,8 @@ export const websiteRouter = createTRPCRouter({
           blogPosts: {
             create: blogPosts?.map((post) => ({ title: post })) ?? [],
           },
+          blogAmountMonthly, // Add this
+          blogStartingDate, // Add this
         },
       });
 
