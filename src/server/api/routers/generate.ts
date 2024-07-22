@@ -77,6 +77,16 @@ export const generateRouter = createTRPCRouter({
         companyName,
       } = input;
 
+      console.log("Generating blog post with the following data:", {
+        websiteId,
+        keywords,
+        stockCategory,
+        locations,
+        phoneNumber,
+        emailAddress,
+        companyName,
+      });
+
       const categoryNumber = stockCategoryMapping[stockCategory];
       if (!categoryNumber) {
         throw new Error("Invalid stock category");
@@ -98,6 +108,8 @@ export const generateRouter = createTRPCRouter({
           },
         );
 
+        console.log("Content generation response:", response.data);
+
         const { content: fullContent, title: blogTitle } = response.data;
 
         const blogToReview = await ctx.db.blogToReview.create({
@@ -108,6 +120,8 @@ export const generateRouter = createTRPCRouter({
           },
         });
 
+        console.log("Blog to review created:", blogToReview);
+
         return blogToReview;
       } catch (error) {
         console.error("Failed to generate content:", error);
@@ -116,81 +130,94 @@ export const generateRouter = createTRPCRouter({
     }),
 
   getBlogsToReview: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db.blogToReview.findMany({
-      include: {
-        website: true, // Ensure website details are included
-      },
-    });
+    try {
+      const blogsToReview = await ctx.db.blogToReview.findMany({
+        include: {
+          website: true, // Ensure website details are included
+        },
+      });
+      console.log("Fetched blogs to review:", blogsToReview);
+      return blogsToReview;
+    } catch (error) {
+      console.error("Failed to fetch blogs to review:", error);
+      throw new Error("Failed to fetch blogs to review");
+    }
   }),
 
   acceptBlogPost: publicProcedure
     .input(z.number())
     .mutation(async ({ input, ctx }) => {
-      const blog = await ctx.db.blogToReview.findUnique({
-        where: { id: input },
-        include: {
-          website: true, // Include the website details
-        },
-      });
-
-      if (!blog) {
-        throw new Error("Blog post not found");
-      }
-
-      const { url, username, applicationPassword, stockCategory } = blog.website;
-
-      const uploadImageToWordPress = async (imageUrl: string): Promise<number> => {
-        const response = await fetch(imageUrl);
-        const imageBlob = await response.blob();
-        const formData = new FormData();
-        formData.append("file", imageBlob, "featured-image.jpg");
-
-        const uploadResponse = await fetch(`${url}/wp-json/wp/v2/media`, {
-          method: "POST",
-          headers: {
-            Authorization: "Basic " + btoa(`${username}:${applicationPassword}`),
-          },
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error("Failed to upload image to WordPress");
-        }
-
-        const uploadData = await uploadResponse.json();
-        return uploadData.id;
-      };
-
-      const publishToWordPress = async (
-        url: string,
-        username: string,
-        applicationPassword: string,
-        title: string,
-        content: string,
-        featuredImageId: number,
-      ): Promise<unknown> => {
-        const response = await fetch(`${url}/wp-json/wp/v2/posts`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Basic " + btoa(`${username}:${applicationPassword}`),
-          },
-          body: JSON.stringify({
-            title: title,
-            content: content,
-            status: "publish",
-            featured_media: featuredImageId,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to publish post to WordPress");
-        }
-
-        return response.json();
-      };
-
       try {
+        const blog = await ctx.db.blogToReview.findUnique({
+          where: { id: input },
+          include: {
+            website: true, // Include the website details
+          },
+        });
+
+        if (!blog) {
+          throw new Error("Blog post not found");
+        }
+
+        console.log("Accepting blog post:", blog);
+
+        const { url, username, applicationPassword, stockCategory } = blog.website;
+
+        const uploadImageToWordPress = async (imageUrl: string): Promise<number> => {
+          const response = await fetch(imageUrl);
+          const imageBlob = await response.blob();
+          const formData = new FormData();
+          formData.append("file", imageBlob, "featured-image.jpg");
+
+          const uploadResponse = await fetch(`${url}/wp-json/wp/v2/media`, {
+            method: "POST",
+            headers: {
+              Authorization: "Basic " + btoa(`${username}:${applicationPassword}`),
+            },
+            body: formData,
+          });
+
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text(); // Log the response text
+            console.error(`Failed to upload image to WordPress: ${errorText}`);
+            throw new Error("Failed to upload image to WordPress");
+          }
+
+          const uploadData = await uploadResponse.json();
+          return uploadData.id;
+        };
+
+        const publishToWordPress = async (
+          url: string,
+          username: string,
+          applicationPassword: string,
+          title: string,
+          content: string,
+          featuredImageId: number,
+        ): Promise<unknown> => {
+          const response = await fetch(`${url}/wp-json/wp/v2/posts`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Basic " + btoa(`${username}:${applicationPassword}`),
+            },
+            body: JSON.stringify({
+              title: title,
+              content: content,
+              status: "publish",
+              featured_media: featuredImageId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text(); // Log the response text
+            console.error(`Failed to publish post to WordPress: ${errorText}`);
+            throw new Error("Failed to publish post to WordPress");
+          }
+
+          return response.json();
+        };
+
         const categoryNumber = stockCategoryMapping[stockCategory];
         if (!categoryNumber) {
           throw new Error("Invalid stock category");
@@ -198,6 +225,8 @@ export const generateRouter = createTRPCRouter({
 
         const imageUrl = getRandomImageUrl(categoryNumber);
         const featuredImageId = await uploadImageToWordPress(imageUrl);
+
+        console.log("Image uploaded to WordPress with ID:", featuredImageId);
 
         await publishToWordPress(
           url,
@@ -207,35 +236,42 @@ export const generateRouter = createTRPCRouter({
           blog.content,
           featuredImageId,
         );
+
+        console.log("Blog post published to WordPress");
+
+        await ctx.db.blogComplete.create({
+          data: {
+            title: blog.title,
+            content: blog.content,
+            websiteId: blog.websiteId,
+          },
+        });
+
+        await ctx.db.blogToReview.delete({
+          where: { id: input },
+        });
+
+        console.log("Blog post moved to completed and deleted from review");
+
+        return { success: true };
       } catch (error) {
-        console.error("Failed to publish post to WordPress:", error);
-        throw new Error("Failed to publish post to WordPress");
+        console.error("Failed to accept blog post:", error);
+        throw new Error("Failed to accept blog post");
       }
-
-      await ctx.db.blogComplete.create({
-        data: {
-          title: blog.title,
-          content: blog.content,
-          websiteId: blog.websiteId,
-        },
-      });
-
-      await ctx.db.blogToReview.delete({
-        where: { id: input },
-      });
-
-      return { success: true };
     }),
 
   rejectBlogPost: publicProcedure
     .input(z.number())
     .mutation(async ({ input, ctx }) => {
-      await ctx.db.blogToReview.delete({
-        where: { id: input },
-      });
-
-      return { success: true };
+      try {
+        await ctx.db.blogToReview.delete({
+          where: { id: input },
+        });
+        console.log("Rejected blog post with ID:", input);
+        return { success: true };
+      } catch (error) {
+        console.error("Failed to reject blog post:", error);
+        throw new Error("Failed to reject blog post");
+      }
     }),
 });
-
-// Increase Default Duration
