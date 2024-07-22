@@ -237,3 +237,5 @@ export const generateRouter = createTRPCRouter({
       return { success: true };
     }),
 });
+
+// Increase Default Duration
