@@ -234,4 +234,4 @@ function ManageBlogs() {
 
 export const getServerSideProps = withAuthGetServerSideProps();
 
-export default withAuth(ManageBlogs);
+export default ManageBlogs;

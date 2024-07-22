@@ -193,4 +193,4 @@ function BlogsToReview() {
 
 export const getServerSideProps = withAuthGetServerSideProps();
 
-export default withAuth(BlogsToReview);
+export default BlogsToReview;
