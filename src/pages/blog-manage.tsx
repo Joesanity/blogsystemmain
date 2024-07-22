@@ -55,7 +55,27 @@ function ManageBlogs() {
 
     const requiredBlogs = calculateRequiredBlogs(website.blogStartingDate, parseInt(website.blogAmountMonthly, 10), website.blogsComplete.length);
     if (requiredBlogs <= 0) {
-      alert("No blogs need to be generated for this website.");
+      if (window.confirm("No blogs need to be generated for this website. Do you want to create a blog post anyway?")) {
+        try {
+          setLoadingWebsiteId(website.id);
+          await generateBlogPostMutation.mutateAsync({
+            websiteId: website.id,
+            keywords: website.keywords,
+            stockCategory: website.stockCategory,
+            locations: website.locations,
+            phoneNumber: website.phoneNumber,
+            emailAddress: website.emailAddress,
+            companyName: website.companyName,
+          });
+          alert("Blog post generated and added to review!");
+          router.reload();
+        } catch (error) {
+          console.error("Failed to generate blog post:", error);
+          alert("Failed to generate blog post. Please try again.");
+        } finally {
+          setLoadingWebsiteId(null);
+        }
+      }
       return;
     }
 
