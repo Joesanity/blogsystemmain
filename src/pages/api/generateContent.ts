@@ -1,4 +1,3 @@
-// /pages/api/generateContent.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
 
@@ -12,19 +11,15 @@ const generateContent = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   const { keywords, stockCategory, locations, phoneNumber, emailAddress, companyName } = req.body as {
-    keywords: string[];
+    keywords: string;
     stockCategory: string;
-    locations: string[];
+    locations: string;
     phoneNumber: string;
     emailAddress: string;
     companyName: string;
   };
 
   try {
-    // Join arrays into strings
-    const keywordsStr = keywords.join(', ');
-    const locationsStr = locations.join(', ');
-
     // Title of content
     const titleResponse = await openai.chat.completions.create({
       messages: [
@@ -34,7 +29,7 @@ const generateContent = async (req: NextApiRequest, res: NextApiResponse) => {
         },
         {
           role: 'user',
-          content: `Create one blog post idea from one of these: ${keywordsStr} and use one of these locations: ${locationsStr}. Make it suitable for long tail keywords, it should be between 7-10 words and be a creative idea that isn't common.`
+          content: `Create one blog post idea from one of these: ${keywords} and use one of these locations: ${locations}. Make it suitable for long tail keywords, it should be between 7-10 words and be a creative idea that isn't common.`
         }
       ],
       model: 'gpt-4o-mini',
