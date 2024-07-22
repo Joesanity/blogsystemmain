@@ -33,7 +33,7 @@ declare module "next-auth" {
 /**
  * Array of Discord IDs that should be allowed access
  */
-const ALLOWED_DISCORD_IDS = ['clypvyczr0000fv7mlmai70b6'];  // Add more IDs as needed
+const ALLOWED_DISCORD_IDS = ['clypvyczr0000fv7mlmai70b6','clywrxx3d0000ou4flfa3dt52','clyws70do0005ou4f7qoxzkz4'];  // Add more IDs as needed
 
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
