@@ -86,7 +86,7 @@ export const generateRouter = createTRPCRouter({
 
       try {
         const response = await axios.post<GenerateContentResponse>(
-          "http://localhost:3000/api/generateContent",
+          "https://blogsystemmain.vercel.app/api/generateContent",
           {
             keywords,
             stockCategory,
