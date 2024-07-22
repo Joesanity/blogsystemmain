@@ -183,6 +183,7 @@ export const generateRouter = createTRPCRouter({
           formData.append("file", imageBlob, "featured-image.jpg");
 
           console.log("Uploading image with form data:", formData);
+          console.log(`Auth Header ${btoa(`${username}:${applicationPassword}`)}`);
 
           const uploadResponse = await fetch(`${url}/wp-json/wp/v2/media`, {
             method: "POST",
