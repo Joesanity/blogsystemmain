@@ -72,8 +72,10 @@ const AddWebsite = () => {
   };
 
   const handleDelete = async (toDelete: string) => {
-    mutation.mutate({ url: toDelete });
-    router.reload();
+    if (window.confirm(`Are you sure you want to delete this website: ${toDelete}?`)) {
+      mutation.mutate({ url: toDelete });
+      router.reload();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
