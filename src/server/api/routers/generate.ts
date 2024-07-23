@@ -44,7 +44,7 @@ const stockCategoryMapping: Record<string, number> = {
 
 const getRandomImageUrl = (categoryNumber: number) => {
   const randomImageNumber = Math.floor(Math.random() * 6) + 1;
-  return `https://blog-images.stackstaging.com/${categoryNumber}/${randomImageNumber}.jpg`;
+  return `https://blog-images.stackstaging.com/${categoryNumber}/comp_${randomImageNumber}.jpg`;
 };
 
 type GenerateContentResponse = {
