@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../utils/api";
 import { useRouter } from "next/router";
 import withAuth, { withAuthGetServerSideProps } from "~/components/hoc/withAuth";
+import { ZodError } from "zod";
 
 type FormData = {
   url: string;
@@ -80,22 +81,37 @@ const AddWebsite = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form Data:", formData); // Log form data
+    console.log("Form Data:", formData);
   
     const formDataToSubmit = {
       ...formData,
       blogStartingDate: formData.blogStartingDate ? formData.blogStartingDate : "null",
     };
   
+    console.log("Form Data to Submit:", formDataToSubmit);
+  
     try {
       await addWebsite.mutateAsync(formDataToSubmit);
       alert("Website added successfully!");
-    } catch (error) {
-      console.error("Error adding website:", error); // Log error
-      alert("Failed to add website.");
+      router.reload();
+    } catch (error: unknown) {
+      console.error("Error adding website:", error);
+  
+      if (error instanceof ZodError) {
+        const errorMessages = error.errors.map(e => `${e.path.join(' > ')}: ${e.message}`).join(", ");
+        alert("Validation Error: " + errorMessages);
+      } else if (error instanceof Error && error.message && error.cause instanceof ZodError) {
+        const zodError = error.cause as ZodError;
+        const errorMessages = zodError.errors.map(e => `${e.path.join(' > ')}: ${e.message}`).join(", ");
+        alert("Validation Error: " + errorMessages);
+      } else if (error instanceof Error) {
+        alert("Failed to add website. " + error.message);
+      } else {
+        alert("Failed to add website. An unknown error occurred.");
+      }
     }
-    router.reload();
   };
+  
 
   const stockCategoryMapping = {
     Abroad: 1,

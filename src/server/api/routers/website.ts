@@ -4,42 +4,48 @@ import {
   protectedProcedure,
 } from "~/server/api/trpc";
 
+import { TRPCError } from "@trpc/server";
+import { ZodError } from "zod";
+
 export const websiteRouter = createTRPCRouter({
   addWebsite: protectedProcedure
-    .input(
-      z.object({
-        url: z.string().url(),
-        username: z.string(),
-        applicationPassword: z.string(),
-        companyName: z.string(),
-        phoneNumber: z.string(),
-        emailAddress: z.string().email(),
-        stockCategory: z.string(),
-        keywords: z.string(),
-        locations: z.string(),
-        landingPages: z.array(z.string()).optional(),
-        blogPosts: z.array(z.string()).optional(),
-        blogAmountMonthly: z.string(), // Add this
-        blogStartingDate: z.string(), // Add this
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const {
-        url,
-        username,
-        applicationPassword,
-        companyName,
-        phoneNumber,
-        emailAddress,
-        stockCategory,
-        keywords,
-        locations,
-        landingPages,
-        blogPosts,
-        blogAmountMonthly, // Add this
-        blogStartingDate, // Add this
-      } = input;
+  .input(
+    z.object({
+      url: z.string().url(),
+      username: z.string(),
+      applicationPassword: z.string(),
+      companyName: z.string(),
+      phoneNumber: z.string(),
+      emailAddress: z.string().email(),
+      stockCategory: z.string(),
+      keywords: z.string(),
+      locations: z.string(),
+      landingPages: z.array(z.string()).optional(),
+      blogPosts: z.array(z.string()).optional(),
+      blogAmountMonthly: z.string(),
+      blogStartingDate: z.string(),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    console.log("Received input:", input);
 
+    const {
+      url,
+      username,
+      applicationPassword,
+      companyName,
+      phoneNumber,
+      emailAddress,
+      stockCategory,
+      keywords,
+      locations,
+      landingPages,
+      blogPosts,
+      blogAmountMonthly,
+      blogStartingDate,
+    } = input;
+
+    try {
       const website = await ctx.db.website.create({
         data: {
           url,
@@ -57,14 +63,27 @@ export const websiteRouter = createTRPCRouter({
           blogPosts: {
             create: blogPosts?.map((post) => ({ title: post })) ?? [],
           },
-          blogAmountMonthly, // Add this
-          blogStartingDate, // Add this
+          blogAmountMonthly,
+          blogStartingDate,
         },
       });
 
       return website;
-    }),
-
+    } catch (error) {
+      if (error instanceof ZodError) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Validation Error',
+          cause: error,
+        });
+      }
+      console.error("Database error:", error);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Database error',
+      });
+    }
+  }),
   getWebsites: protectedProcedure.query(({ ctx }) => {
     return ctx.db.website.findMany({
       include: {
