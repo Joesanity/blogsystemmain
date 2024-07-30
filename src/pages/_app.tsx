@@ -7,7 +7,7 @@ import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
 import Header from "~/components/global/header";
-import { Head } from "next/document";
+import Head from "next/head";
 
 
 const outfit = Outfit({subsets: ['latin']});
