@@ -7,6 +7,7 @@ import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
 import Header from "~/components/global/header";
+import { Head } from "next/document";
 
 
 const outfit = Outfit({subsets: ['latin']});
@@ -18,6 +19,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <SessionProvider session={session}>
       <div className={outfit.className}>
+      <Head>
+        <title>Zeek Blog System</title>
+        <meta name="description" content="Created and Designed by Joe" />
+        <link rel="icon" href="/blogsm-fav.jpg" />
+      </Head>
         <Header />
         <Component {...pageProps} />
       </div>
